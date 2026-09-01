@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KisanFlow — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest: #1F3D2B;
+    --forest-deep: #142A1C;
+    --wheat: #E8A33D;
+    --wheat-light: #F6D9A6;
+    --soil: #B9552A;
+    --cream: #FBF7EF;
+    --paper: #FFFFFF;
+    --line: #E4DCC9;
+    --ink: #21261B;
+    --ink-soft: #5B6152;
+    --ok: #2F9E44;
+    --ok-bg: #E7F6EA;
+    --warn: #C9860B;
+    --warn-bg: #FCF0D8;
+    --crit: #C63C2F;
+    --crit-bg: #FBE7E2;
+    --radius: 14px;
+    --shadow: 0 1px 2px rgba(20,42,28,0.06), 0 8px 24px rgba(20,42,28,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--cream);
+    color: var(--ink);
+    font-family:'Hanken Grotesk', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    color: var(--forest-deep);
+    margin:0;
+  }
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{background:var(--wheat-light);}
+
+  /* ===== Top Bar ===== */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    border-bottom:1px solid var(--line);
+    background:var(--paper);
+    position:sticky; top:0; z-index:50;
+    flex-wrap:wrap; gap:12px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:9px;
+    background: linear-gradient(155deg, var(--forest) 0%, var(--forest-deep) 100%);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--wheat-light); font-family:'Fraunces',serif; font-weight:700; font-size:18px;
+  }
+  .brand-name{font-family:'Fraunces',serif; font-weight:600; font-size:19px; color:var(--forest-deep);}
+  .brand-tag{font-size:11px; color:var(--ink-soft); letter-spacing:0.02em;}
+
+  .view-toggle{
+    display:flex; background:var(--cream); border:1px solid var(--line); border-radius:999px; padding:3px;
+  }
+  .view-toggle button{
+    border:none; background:transparent; padding:9px 18px; border-radius:999px;
+    font-size:13.5px; font-weight:600; color:var(--ink-soft); transition:all .18s ease;
+  }
+  .view-toggle button.active{
+    background:var(--forest-deep); color:var(--wheat-light);
+  }
+  .lang-pill{
+    font-size:12px; color:var(--ink-soft); border:1px solid var(--line); padding:6px 12px; border-radius:999px;
+    background:var(--paper);
+  }
+
+  .stage{ max-width:1360px; margin:0 auto; padding:28px 20px 64px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ===== FARMER VIEW ===== */
+  .farmer-wrap{
+    display:grid; grid-template-columns: 340px 1fr; gap:32px; align-items:flex-start;
+  }
+  .phone{
+    width:340px; height:700px; background:var(--forest-deep); border-radius:38px; padding:12px;
+    box-shadow: var(--shadow); position:sticky; top:96px;
+  }
+  .phone-screen{
+    width:100%; height:100%; background:var(--cream); border-radius:28px; overflow:hidden;
+    display:flex; flex-direction:column; position:relative;
+  }
+  .phone-notch{
+    height:22px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .phone-notch::before{ content:''; width:70px; height:5px; background:rgba(20,42,28,0.25); border-radius:3px;}
+  .phone-body{ flex:1; overflow-y:auto; padding:0 16px 16px; }
+  .phone-body::-webkit-scrollbar{ width:0; }
+
+  .fscreen{ display:none; animation: fadein .25s ease; }
+  .fscreen.active{ display:block; }
+  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .phone-tabbar{
+    flex-shrink:0; display:flex; border-top:1px solid var(--line); background:var(--paper);
+    padding:6px 6px 10px;
+  }
+  .ptab{
+    flex:1; text-align:center; border:none; background:none; padding:8px 2px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:var(--ink-soft); border-radius:10px;
+  }
+  .ptab.active{ color:var(--forest); background:var(--wheat-light); }
+  .ptab .ic{ font-size:17px; }
+  .ptab .lbl{ font-size:9.5px; font-weight:600; }
+
+  .f-hero-greeting{ padding:18px 0 12px; }
+  .f-hero-greeting .hi{ font-size:12.5px; color:var(--ink-soft); font-weight:600;}
+  .f-hero-greeting h2{ font-size:21px; margin-top:2px; }
+
+  .f-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px; margin-bottom:12px;
+  }
+  .f-card.rec{
+    background: linear-gradient(160deg, var(--forest) 0%, var(--forest-deep) 100%);
+    color:#F4EDDD; border:none;
+  }
+  .f-card.rec .rec-tag{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:700;
+    background:rgba(232,163,61,0.22); color:var(--wheat); padding:4px 9px; border-radius:999px; margin-bottom:8px;
+  }
+  .f-card.rec h3{ color:#FBF7EF; font-size:16px; }
+  .f-card.rec .reason{ font-size:12px; opacity:0.82; margin-top:6px; line-height:1.5; }
+  .f-card.rec .metrics{ display:flex; gap:14px; margin-top:12px; }
+  .f-card.rec .metric b{ display:block; font-size:16px; color:var(--wheat-light); font-family:'Fraunces',serif;}
+  .f-card.rec .metric span{ font-size:10px; opacity:0.7; }
+
+  .centre-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:11px 0; border-bottom:1px solid var(--line);
+  }
+  .centre-row:last-child{ border-bottom:none; }
+  .centre-row .name{ font-size:13.5px; font-weight:600; }
+  .centre-row .meta{ font-size:11px; color:var(--ink-soft); margin-top:2px; }
+  .badge{ font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:999px; white-space:nowrap; }
+  .badge.ok{ background:var(--ok-bg); color:var(--ok); }
+  .badge.warn{ background:var(--warn-bg); color:var(--warn); }
+  .badge.crit{ background:var(--crit-bg); color:var(--crit); }
+
+  .section-label{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin:16px 0 8px; }
+
+  .btn{
+    border:none; border-radius:11px; padding:12px 16px; font-weight:700; font-size:13.5px;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px; width:100%;
+  }
+  .btn.primary{ background:var(--forest); color:#F4EDDD; }
+  .btn.gold{ background:var(--wheat); color:var(--forest-deep); }
+  .btn.ghost{ background:var(--paper); color:var(--forest-deep); border:1.5px solid var(--line); }
+  .btn.sm{ width:auto; padding:9px 14px; font-size:12.5px; }
+
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:11.5px; font-weight:700; color:var(--ink-soft); margin-bottom:5px; }
+  .field select, .field input{
+    width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:10px;
+    font-size:13.5px; font-family:inherit; background:var(--paper); color:var(--ink);
+  }
+  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    border:1.5px solid var(--line); background:var(--paper); border-radius:999px; padding:8px 13px;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft);
+  }
+  .chip.sel{ background:var(--forest); border-color:var(--forest); color:#F4EDDD; }
+
+  .token-hero{
+    text-align:center; padding:22px 10px; background:var(--paper); border:1px solid var(--line);
+    border-radius:var(--radius); margin-bottom:14px;
+  }
+  .token-hero .num{ font-family:'Fraunces',serif; font-size:44px; color:var(--forest-deep); font-weight:700; line-height:1; }
+  .token-hero .sub{ font-size:12px; color:var(--ink-soft); margin-top:6px; }
+  .token-hero .eta{
+    margin-top:14px; display:inline-flex; gap:6px; align-items:center; background:var(--wheat-light);
+    color:var(--forest-deep); padding:7px 14px; border-radius:999px; font-size:12px; font-weight:700;
+  }
+
+  .stepper{ margin:6px 0 16px; }
+  .step{ display:flex; gap:12px; padding-bottom:18px; position:relative; }
+  .step:last-child{ padding-bottom:0; }
+  .step::before{
+    content:''; position:absolute; left:11px; top:24px; bottom:0; width:2px; background:var(--line);
+  }
+  .step:last-child::before{ display:none; }
+  .step .dot{
+    width:24px; height:24px; border-radius:50%; background:var(--paper); border:2px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; z-index:1;
+  }
+  .step.done .dot{ background:var(--ok); border-color:var(--ok); color:#fff; }
+  .step.active .dot{ background:var(--forest); border-color:var(--forest); color:#fff; }
+  .step .txt b{ display:block; font-size:13px; }
+  .step .txt span{ font-size:11px; color:var(--ink-soft); }
+
+  .upload-box{
+    border:2px dashed var(--line); border-radius:var(--radius); padding:24px 14px; text-align:center;
+    color:var(--ink-soft); font-size:12.5px; background:var(--paper);
+  }
+  .upload-box .ic{ font-size:26px; margin-bottom:6px; }
+  .result-pill{
+    display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:10px; margin-top:12px; font-size:12.5px; font-weight:600;
+  }
+  .result-pill.ok{ background:var(--ok-bg); color:var(--ok); }
+  .result-pill.warn{ background:var(--warn-bg); color:var(--warn); }
+  .note-disc{ font-size:10.5px; color:var(--ink-soft); margin-top:6px; font-style:italic; }
+
+  .notif-item{ display:flex; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); }
+  .notif-item .dot2{ width:8px;height:8px;border-radius:50%; background:var(--wheat); margin-top:5px; flex-shrink:0; }
+  .notif-item b{ font-size:12.5px; display:block; }
+  .notif-item span{ font-size:11px; color:var(--ink-soft); }
+
+  .voice-panel{ text-align:center; padding:28px 10px; }
+  .mic-btn{
+    width:78px; height:78px; border-radius:50%; border:none; margin:0 auto 16px;
+    background: radial-gradient(circle at 35% 30%, var(--wheat), var(--soil));
+    color:#fff; font-size:28px; display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 8px 24px rgba(185,85,42,0.35);
+  }
+  .voice-hint{ font-size:12.5px; color:var(--ink-soft); }
+  .voice-transcript{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:12px; margin-top:16px;
+    font-size:12.5px; text-align:left; display:none;
+  }
+  .voice-transcript.show{ display:block; }
+  .voice-transcript .you{ color:var(--ink-soft); margin-bottom:6px; }
+  .voice-transcript .ai{ color:var(--forest-deep); font-weight:600; }
+
+  .farmer-side-note{ max-width:520px; padding-top:8px; }
+  .farmer-side-note h1{ font-size:30px; margin-bottom:10px; }
+  .farmer-side-note p{ color:var(--ink-soft); line-height:1.65; font-size:14.5px; margin-bottom:22px; }
+  .flow-list{ display:flex; flex-direction:column; gap:14px; }
+  .flow-list li{ list-style:none; display:flex; gap:12px; align-items:flex-start; }
+  .flow-list .n{
+    width:26px;height:26px; border-radius:50%; background:var(--forest); color:#F4EDDD; font-size:12px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-family:'Fraunces',serif;
+  }
+  .flow-list b{ font-size:14px; display:block; }
+  .flow-list span{ font-size:12.5px; color:var(--ink-soft); }
+
+  /* ===== OFFICER VIEW ===== */
+  .off-wrap{ display:grid; grid-template-columns:230px 1fr; gap:24px; }
+  .off-sidebar{
+    background:var(--forest-deep); border-radius:16px; padding:18px 14px; height:fit-content; position:sticky; top:96px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .off-side-title{ color:var(--wheat); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; padding:4px 10px 10px; }
+  .oside{
+    text-align:left; background:none; border:none; color:#D9DCC9; padding:10px 10px; border-radius:9px;
+    font-size:13px; font-weight:600;
+  }
+  .oside.active{ background:rgba(232,163,61,0.16); color:var(--wheat-light); }
+  .off-side-foot{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:#A9AE99; line-height:1.6; }
+
+  .off-main{ min-width:0; }
+  .opanel{ display:none; }
+  .opanel.active{ display:block; animation:fadein .25s ease; }
+  .off-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+  .off-head h2{ font-size:22px; }
+  .off-updated{ font-size:11.5px; color:var(--ink-soft); }
+
+  .kpi-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .kpi{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+  .kpi-num{ display:block; font-family:'Fraunces',serif; font-size:26px; font-weight:700; color:var(--forest-deep); }
+  .kpi-lbl{ font-size:11.5px; color:var(--ink-soft); }
+
+  .dtable{ width:100%; border-collapse:collapse; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .dtable th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); background:var(--cream); padding:11px 14px; border-bottom:1px solid var(--line); }
+  .dtable td{ padding:12px 14px; font-size:13px; border-bottom:1px solid var(--line); }
+  .dtable tr:last-child td{ border-bottom:none; }
+  .bar{ width:90px; height:7px; background:var(--line); border-radius:99px; overflow:hidden; }
+  .bar i{ display:block; height:100%; border-radius:99px; }
+
+  .map-mock{
+    position:relative; height:420px; background:
+      linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:32px 32px; background-color:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .map-node{
+    position:absolute; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:12.5px; color:#fff; cursor:default;
+  }
+  .map-node.ok{ background:var(--ok); box-shadow:0 0 0 8px rgba(47,158,68,0.15); }
+  .map-node.warn{ background:var(--warn); box-shadow:0 0 0 8px rgba(201,134,11,0.15); }
+  .map-node.crit{ background:var(--crit); box-shadow:0 0 0 8px rgba(198,60,47,0.18); }
+  .map-tip{
+    position:absolute; top:52px; left:50%; transform:translateX(-50%); background:var(--forest-deep); color:#F4EDDD;
+    font-size:10.5px; font-weight:600; padding:5px 9px; border-radius:7px; white-space:nowrap; opacity:0; transition:opacity .15s;
+  }
+  .map-node:hover .map-tip{ opacity:1; }
+  .map-legend{ position:absolute; bottom:14px; left:14px; display:flex; gap:14px; font-size:11.5px; color:var(--ink-soft); }
+  .map-legend i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; }
+
+  .alert-card{ background:var(--paper); border:1px solid var(--line); border-left:4px solid var(--crit); border-radius:12px; padding:15px; margin-bottom:12px; }
+  .alert-card.warn{ border-left-color:var(--warn); }
+  .alert-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .alert-top b{ font-size:14px; }
+  .alert-card p{ font-size:12.5px; color:var(--ink-soft); margin:8px 0 12px; line-height:1.55; }
+  .alert-actions{ display:flex; gap:8px; }
+
+  .stage-health{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:16px; }
+  .sh-row{ display:grid; grid-template-columns:130px 1fr 150px; align-items:center; gap:14px; padding:9px 0; font-size:13px; }
+  .sh-row .bar{ width:100%; height:9px; }
+  .sh-row b{ font-size:11.5px; color:var(--ink-soft); text-align:right; }
+
+  .sim-grid{ display:grid; grid-template-columns:300px 1fr; gap:20px; }
+  .sim-form{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:16px; height:fit-content; }
+  .sim-result{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:18px; }
+  .compare-row{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px solid var(--line); font-size:13.5px; }
+  .compare-row:last-child{ border-bottom:none; }
+  .compare-row em{ color:var(--crit); font-style:normal; }
+
+  .res-card{ display:flex; justify-content:space-between; align-items:center; background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .res-card b{ display:block; font-size:13.5px; }
+  .res-card span{ font-size:12px; color:var(--ink-soft); }
+
+  @media (max-width: 900px){
+    .farmer-wrap{ grid-template-columns:1fr; }
+    .phone{ position:relative; top:0; margin:0 auto; }
+    .off-wrap{ grid-template-columns:1fr; }
+    .off-sidebar{ position:relative; top:0; flex-direction:row; overflow-x:auto; }
+    .kpi-row{ grid-template-columns:repeat(2,1fr); }
+    .sim-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">K</div>
+    <div>
+      <div class="brand-name">KisanFlow</div>
+      <div class="brand-tag">AI procurement queue management · SIH 2026 prototype</div>
+    </div>
+  </div>
+  <div class="view-toggle">
+    <button id="btn-farmer" class="active" onclick="setView('farmer')">Farmer app</button>
+    <button id="btn-officer" onclick="setView('officer')">Officer dashboard</button>
+  </div>
+  <div class="lang-pill">🌐 EN / हिं</div>
+</div>
+
+<div class="stage">
+
+  <!-- ============ FARMER VIEW ============ -->
+  <div id="view-farmer" class="view active">
+    <div class="farmer-wrap">
+
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="phone-notch"></div>
+          <div class="phone-body" id="phone-body">
+
+            <!-- HOME / DISCOVER -->
+            <div class="fscreen active" data-screen="home">
+              <div class="f-hero-greeting">
+                <div class="hi">Namaste, Ramesh 👋</div>
+                <h2>Where should you sell today?</h2>
+              </div>
+
+              <div class="f-card rec">
+                <div class="rec-tag">✨ AI recommended centre</div>
+                <h3>Rampur Mandi — Centre 3</h3>
+                <div class="reason">4.2 km away, shortest queue right now, and your wheat quality tier matches today's active buyer. Going here saves you roughly 55 minutes versus Sherpur Mandi.</div>
+                <div class="metrics">
+                  <div class="metric"><b>4.2 km</b><span>distance</span></div>
+                  <div class="metric"><b>12 min</b><span>current wait</span></div>
+                  <div class="metric"><b>55 min</b><span>time saved</span></div>
+                </div>
+              </div>
+
+              <div class="section-label">Nearby centres</div>
+              <div class="f-card" style="padding:6px 14px;">
+                <div class="centre-row">
+                  <div><div class="name">Rampur Mandi — C3</div><div class="meta">4.2 km · queue 8</div></div>
+                  <span class="badge ok">Low load</span>
+                </div>
+                <div class="centre-row">
+                  <div><div class="name">Sherpur Mandi — C1</div><div class="meta">6.8 km · queue 26</div></div>
+                  <span class="badge warn">Busy</span>
+                </div>
+                <div class="centre-row">
+                  <div><div class="name">Basantpur — C5</div><div class="meta">9.1 km · queue 41</div></div>
+                  <span class="badge crit">Overloaded</span>
+                </div>
+              </div>
+
+              <button class="btn primary" onclick="goScreen('book')">Book a slot at Rampur →</button>
+            </div>
+
+            <!-- BOOKING -->
+            <div class="fscreen" data-screen="book">
+              <div class="f-hero-greeting" style="padding-top:16px;">
+                <h2 style="font-size:19px;">Book your slot</h2>
+              </div>
+              <div class="field">
+                <label>Procurement centre</label>
+                <select><option>Rampur Mandi — Centre 3</option><option>Sherpur Mandi — Centre 1</option></select>
+              </div>
+              <div class="field">
+                <label>Date</label>
+                <input type="date" value="2026-09-02">
+              </div>
+              <div class="field">
+                <label>Time slot</label>
+                <div class="chip-row">
+                  <span class="chip sel">8–10 AM</span>
+                  <span class="chip">10–12 PM</span>
+                  <span class="chip">2–4 PM</span>
+                </div>
+              </div>
+              <div class="field">
+                <label>Produce &amp; quantity</label>
+                <input type="text" value="Wheat — 18 quintal">
+              </div>
+              <button class="btn gold" onclick="confirmBooking()">Confirm booking</button>
+            </div>
+
+            <!-- QUEUE / TOKEN -->
+            <div class="fscreen" data-screen="queue">
+              <div class="f-hero-greeting" style="padding-top:16px;">
+                <h2 style="font-size:19px;">Your token</h2>
+              </div>
+              <div class="token-hero">
+                <div class="num">A104</div>
+                <div class="sub">Now serving <b>A097</b> · 7 farmers ahead of you</div>
+                <div class="eta">🕒 Estimated wait: 24 min</div>
+              </div>
+              <button class="btn ghost" style="margin-bottom:14px;" onclick="goScreen('tracker')">View procurement status →</button>
+
+              <div class="f-card" style="background:var(--wheat-light); border:none;">
+                <b style="font-size:12.5px;">🔔 Silent queue alert</b>
+                <div style="font-size:11.5px; color:var(--forest-deep); margin-top:4px;">We'll ping you to start travelling once you're 20 minutes out — no need to wait at the centre.</div>
+              </div>
+            </div>
+
+            <!-- STATUS TRACKER -->
+            <div class="fscreen" data-screen="tracker">
+              <div class="f-hero-greeting" style="padding-top:16px;">
+                <h2 style="font-size:19px;">Procurement status</h2>
+              </div>
+              <div class="stepper">
+                <div class="step done"><div class="dot">✓</div><div class="txt"><b>Token generated</b><span>9:02 AM · A104</span></div></div>
+                <div class="step done"><div class="dot">✓</div><div class="txt"><b>Arrived at centre</b><span>9:31 AM</span></div></div>
+                <div class="step active"><div class="dot">●</div><div class="txt"><b>Weighing in progress</b><span>Started 9:44 AM</span></div></div>
+                <div class="step"><div class="dot">4</div><div class="txt" style="color:var(--ink-soft);"><b>Quality check</b><span>Pending</span></div></div>
+                <div class="step"><div class="dot">5</div><div class="txt" style="color:var(--ink-soft);"><b>Payment initiated</b><span>Pending</span></div></div>
+              </div>
+            </div>
+
+            <!-- CROP QUALITY -->
+            <div class="fscreen" data-screen="quality">
+              <div class="f-hero-greeting" style="padding-top:16px;">
+                <h2 style="font-size:19px;">Crop quality check</h2>
+              </div>
+              <div class="upload-box" onclick="runQuality()" style="cursor:pointer;">
+                <div class="ic">📷</div>
+                Tap to upload a photo of your produce
+              </div>
+              <div id="quality-result"></div>
+              <div class="note-disc">Preliminary AI screening only — final grading is done by the centre officer.</div>
+            </div>
+
+            <!-- NOTIFICATIONS -->
+            <div class="fscreen" data-screen="notif">
+              <div class="f-hero-greeting" style="padding-top:16px;">
+                <h2 style="font-size:19px;">Notifications</h2>
+              </div>
+              <div class="notif-item"><div class="dot2"></div><div><b>Start travelling now</b><span>Your turn is in ~20 min at Rampur Mandi</span></div></div>
+              <div class="notif-item"><div class="dot2" style="background:var(--ok);"></div><div><b>Booking confirmed</b><span>Token A104 · 8–10 AM slot</span></div></div>
+              <div class="notif-item"><div class="dot2" style="background:var(--soil);"></div><div><b>Payment expected</b><span>Within 3 working days after weighing</span></div></div>
+            </div>
+
+            <!-- VOICE -->
+            <div class="fscreen" data-screen="voice">
+              <div class="voice-panel">
+                <h2 style="font-size:19px; margin-bottom:6px;">Ask KisanFlow</h2>
+                <p class="voice-hint">Tap the mic and speak in Hindi, English, or your local language</p>
+                <button class="mic-btn" onclick="simulateVoice()">🎙️</button>
+                <div class="voice-hint">Try: "Aaj kaunsa mandi sabse kam bheed wala hai?"</div>
+                <div class="voice-transcript" id="voice-out">
+                  <div class="you">🗣️ "Aaj kaunsa mandi sabse kam bheed wala hai?"</div>
+                  <div class="ai">🤖 Rampur Mandi has the shortest queue today — only 8 farmers waiting, about 12 minutes.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="phone-tabbar">
+            <button class="ptab active" data-tab="home" onclick="goScreen('home')"><span class="ic">🏠</span><span class="lbl">Home</span></button>
+            <button class="ptab" data-tab="queue" onclick="goScreen('queue')"><span class="ic">🎫</span><span class="lbl">Queue</span></button>
+            <button class="ptab" data-tab="quality" onclick="goScreen('quality')"><span class="ic">🌾</span><span class="lbl">Quality</span></button>
+            <button class="ptab" data-tab="notif" onclick="goScreen('notif')"><span class="ic">🔔</span><span class="lbl">Alerts</span></button>
+            <button class="ptab" data-tab="voice" onclick="goScreen('voice')"><span class="ic">🎙️</span><span class="lbl">Voice</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="farmer-side-note">
+        <h1>Built for the farmer, not around the app.</h1>
+        <p>Large touch targets, minimal reading, and an AI that recommends where to go instead of asking farmers to figure it out. Tap through the phone on the left — every screen from the Part 1 &amp; Part 2 prompt pack is wired up.</p>
+        <ul class="flow-list">
+          <li><span class="n">1</span><div><b>Discover</b><span>See nearby centres ranked by AI, with plain-language reasoning.</span></div></li>
+          <li><span class="n">2</span><div><b>Book</b><span>Pick a date, slot and quantity — get an instant token.</span></div></li>
+          <li><span class="n">3</span><div><b>Travel smart</b><span>A silent-queue alert tells you exactly when to leave home.</span></div></li>
+          <li><span class="n">4</span><div><b>Track</b><span>Watch your produce move through weighing, quality check and payment.</span></div></li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ OFFICER VIEW ============ -->
+  <div id="view-officer" class="view">
+    <div class="off-wrap">
+
+      <div class="off-sidebar">
+        <div class="off-side-title">District command</div>
+        <button class="oside active" data-panel="queue" onclick="goPanel('queue')">📊 Live queue monitor</button>
+        <button class="oside" data-panel="map" onclick="goPanel('map')">🗺️ Command centre map</button>
+        <button class="oside" data-panel="crisis" onclick="goPanel('crisis')">⚠️ Crisis predictor</button>
+        <button class="oside" data-panel="bottleneck" onclick="goPanel('bottleneck')">🧩 Bottleneck detection</button>
+        <button class="oside" data-panel="simulator" onclick="goPanel('simulator')">🕹️ What-if simulator</button>
+        <button class="oside" data-panel="resource" onclick="goPanel('resource')">🛠️ Resource optimization</button>
+        <div class="off-side-foot">Logged in as<br><b>District Officer · Meerut</b></div>
+      </div>
+
+      <div class="off-main">
+
+        <!-- LIVE QUEUE -->
+        <div class="opanel active" data-panel="queue">
+          <div class="off-head">
+            <h2>Live queue monitor</h2>
+            <span class="off-updated">Updated 6 sec ago</span>
+          </div>
+          <div class="kpi-row">
+            <div class="kpi"><span class="kpi-num">3,412</span><span class="kpi-lbl">Farmers today</span></div>
+            <div class="kpi"><span class="kpi-num" style="color:var(--warn);">2</span><span class="kpi-lbl">Centres at risk</span></div>
+            <div class="kpi"><span class="kpi-num">18 min</span><span class="kpi-lbl">Avg wait, district</span></div>
+            <div class="kpi"><span class="kpi-num" style="color:var(--ok);">96%</span><span class="kpi-lbl">On-time processing</span></div>
+          </div>
+
+          <table class="dtable">
+            <thead><tr><th>Centre</th><th>Serving</th><th>Waiting</th><th>Processed</th><th>Counters active</th><th>Load</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><b>Rampur — C3</b></td><td>A097</td><td>8</td><td>112</td><td>3 / 4</td><td><div class="bar"><i style="width:32%; background:var(--ok);"></i></div></td><td><span class="badge ok">Healthy</span></td></tr>
+              <tr><td><b>Sherpur — C1</b></td><td>B211</td><td>26</td><td>184</td><td>3 / 3</td><td><div class="bar"><i style="width:71%; background:var(--warn);"></i></div></td><td><span class="badge warn">Busy</span></td></tr>
+              <tr><td><b>Basantpur — C5</b></td><td>C044</td><td>41</td><td>96</td><td>2 / 4</td><td><div class="bar"><i style="width:93%; background:var(--crit);"></i></div></td><td><span class="badge crit">Overloaded</span></td></tr>
+              <tr><td><b>Nangal — C2</b></td><td>D019</td><td>4</td><td>77</td><td>2 / 3</td><td><div class="bar"><i style="width:18%; background:var(--ok);"></i></div></td><td><span class="badge ok">Healthy</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MAP / COMMAND CENTRE -->
+        <div class="opanel" data-panel="map">
+          <div class="off-head"><h2>District command centre</h2><span class="off-updated">6 centres tracked</span></div>
+          <div class="map-mock">
+            <div class="map-node ok" style="top:22%; left:18%;">C3<span class="map-tip">Rampur · Healthy</span></div>
+            <div class="map-node warn" style="top:48%; left:52%;">C1<span class="map-tip">Sherpur · Busy</span></div>
+            <div class="map-node crit" style="top:68%; left:30%;">C5<span class="map-tip">Basantpur · Overloaded</span></div>
+            <div class="map-node ok" style="top:35%; left:75%;">C2<span class="map-tip">Nangal · Healthy</span></div>
+            <div class="map-legend">
+              <span><i style="background:var(--ok);"></i> Healthy</span>
+              <span><i style="background:var(--warn);"></i> Busy</span>
+              <span><i style="background:var(--crit);"></i> Overloaded</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CRISIS PREDICTOR -->
+        <div class="opanel" data-panel="crisis">
+          <div class="off-head"><h2>Crisis predictor</h2><span class="off-updated">2 active alerts</span></div>
+          <div class="alert-card crit">
+            <div class="alert-top"><b>Basantpur — C5 will overload in ~35 min</b><span class="badge crit">High severity</span></div>
+            <p>Queue growth rate has tripled in the last hour while 2 of 4 counters remain inactive. Projected backlog: 60+ farmers by 1:15 PM.</p>
+            <div class="alert-actions"><button class="btn sm gold">Open 2 counters</button><button class="btn sm ghost">Redirect new bookings</button></div>
+          </div>
+          <div class="alert-card warn">
+            <div class="alert-top"><b>Sherpur — C1 approaching capacity</b><span class="badge warn">Medium severity</span></div>
+            <p>Load is at 71% with harvest-season arrivals trending upward for the third consecutive day.</p>
+            <div class="alert-actions"><button class="btn sm ghost">Review staffing plan</button></div>
+          </div>
+        </div>
+
+        <!-- BOTTLENECK -->
+        <div class="opanel" data-panel="bottleneck">
+          <div class="off-head"><h2>Bottleneck detection</h2><span class="off-updated">Basantpur — C5</span></div>
+          <div class="stage-health">
+            <div class="sh-row"><span>Registration</span><div class="bar"><i style="width:20%; background:var(--ok);"></i></div><b>2.1 min avg</b></div>
+            <div class="sh-row"><span>Weighing</span><div class="bar"><i style="width:34%; background:var(--ok);"></i></div><b>4.8 min avg</b></div>
+            <div class="sh-row"><span>Quality check</span><div class="bar"><i style="width:88%; background:var(--crit);"></i></div><b>16.4 min avg — bottleneck</b></div>
+            <div class="sh-row"><span>Payment entry</span><div class="bar"><i style="width:26%; background:var(--ok);"></i></div><b>3.0 min avg</b></div>
+          </div>
+          <div class="f-card" style="background:var(--paper); margin-top:14px;">
+            <b style="font-size:13px;">Suggested fix</b>
+            <p style="font-size:12.5px; color:var(--ink-soft); margin:6px 0 0;">Only 1 quality inspector is active against 41 farmers waiting. Adding a second inspector is projected to cut this stage's wait by ~48%.</p>
+          </div>
+        </div>
+
+        <!-- WHAT-IF SIMULATOR -->
+        <div class="opanel" data-panel="simulator">
+          <div class="off-head"><h2>What-if simulator</h2><span class="off-updated">Scenario planning</span></div>
+          <div class="sim-grid">
+            <div class="sim-form">
+              <div class="field"><label>Scenario</label>
+                <select id="sim-scenario" onchange="runSim()">
+                  <option>Centre closes for a day</option>
+                  <option>Farmer arrivals +30%</option>
+                  <option>2 staff unavailable</option>
+                  <option>Weighing machine failure</option>
+                </select>
+              </div>
+              <div class="field"><label>Target centre</label>
+                <select><option>Basantpur — C5</option><option>Sherpur — C1</option></select>
+              </div>
+              <button class="btn primary" onclick="runSim()">Run simulation</button>
+            </div>
+            <div class="sim-result">
+              <div class="section-label" style="margin-top:0;">Before → After</div>
+              <div class="compare-row"><span>Avg wait time</span><b>18 min → <em id="sim-wait">41 min</em></b></div>
+              <div class="compare-row"><span>Farmers affected</span><b id="sim-affected">312</b></div>
+              <div class="compare-row"><span>Redistributed to</span><b id="sim-redist">Rampur (+120), Nangal (+90)</b></div>
+              <div class="compare-row"><span>Overload risk</span><b><span class="badge warn" id="sim-risk">Elevated</span></b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESOURCE OPTIMIZATION -->
+        <div class="opanel" data-panel="resource">
+          <div class="off-head"><h2>Resource optimization</h2><span class="off-updated">AI suggestions</span></div>
+          <div class="res-card">
+            <div><b>Basantpur — C5</b><span>Add 2 counters, 1 quality inspector by 11 AM</span></div>
+            <span class="badge crit">Urgent</span>
+          </div>
+          <div class="res-card">
+            <div><b>Sherpur — C1</b><span>Add 1 counter during 2–4 PM peak window</span></div>
+            <span class="badge warn">Plan ahead</span>
+          </div>
+          <div class="res-card">
+            <div><b>Rampur — C3</b><span>Currently optimal — no changes recommended</span></div>
+            <span class="badge ok">Stable</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function setView(v){
+  document.getElementById('view-farmer').classList.toggle('active', v==='farmer');
+  document.getElementById('view-officer').classList.toggle('active', v==='officer');
+  document.getElementById('btn-farmer').classList.toggle('active', v==='farmer');
+  document.getElementById('btn-officer').classList.toggle('active', v==='officer');
+}
+function goScreen(name){
+  document.querySelectorAll('.fscreen').forEach(s=>s.classList.toggle('active', s.dataset.screen===name));
+  document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.getElementById('phone-body').scrollTop = 0;
+}
+function confirmBooking(){ goScreen('queue'); }
+function runQuality(){
+  document.getElementById('quality-result').innerHTML =
+    '<div class="result-pill ok">🟢 Low apparent risk — moisture &amp; colour look within normal range</div>';
+}
+function simulateVoice(){
+  document.getElementById('voice-out').classList.add('show');
+}
+
+function goPanel(name){
+  document.querySelectorAll('.opanel').forEach(p=>p.classList.toggle('active', p.dataset.panel===name));
+  document.querySelectorAll('.oside').forEach(b=>b.classList.toggle('active', b.dataset.panel===name));
+}
+
+const simData = {
+  "Centre closes for a day": { wait:"48 min", affected:"860", redist:"Rampur (+340), Nangal (+310), Sherpur (+210)", risk:["High","crit"] },
+  "Farmer arrivals +30%": { wait:"41 min", affected:"312", redist:"Rampur (+120), Nangal (+90)", risk:["Elevated","warn"] },
+  "2 staff unavailable": { wait:"33 min", affected:"180", redist:"Sherpur (+95), Rampur (+85)", risk:["Elevated","warn"] },
+  "Weighing machine failure": { wait:"52 min", affected:"140", redist:"Rampur (+140)", risk:["High","crit"] }
+};
+function runSim(){
+  const sc = document.getElementById('sim-scenario').value;
+  const d = simData[sc];
+  document.getElementById('sim-wait').textContent = d.wait;
+  document.getElementById('sim-affected').textContent = d.affected;
+  document.getElementById('sim-redist').textContent = d.redist;
+  const riskEl = document.getElementById('sim-risk');
+  riskEl.textContent = d.risk[0];
+  riskEl.className = 'badge ' + d.risk[1];
+}
+</script>
+</body>
+</html>
